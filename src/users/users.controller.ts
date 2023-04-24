@@ -8,6 +8,8 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { TransformInterceptor } from 'src/interceptors/transform.interceptor';
 
 @Controller('users')
 @ApiTags('users')
@@ -36,9 +39,11 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity, isArray: true })
+  @UseInterceptors(TransformInterceptor)
   async findAll() {
     const users = await this.usersService.findAll();
-    return users.map((user) => new UserEntity(user));
+    const result = users.map((user) => new UserEntity(user))
+    return { statusCode: HttpStatus.OK, message:"users fetched successfully", result:result};
   }
 
   @Get(':id')
