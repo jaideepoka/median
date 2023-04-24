@@ -9,20 +9,21 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.setGlobalPrefix('/api');
 
   const config = new DocumentBuilder()
     .setTitle('Median')
     .setDescription('The Median API description')
-    .setVersion('0.1')
+    .setVersion('1')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('swagger', app, document);
 
   const { httpAdapter } = app.get(HttpAdapterHost);
+  const port = parseInt(process.env.APP_PORT, 10) || 3000;
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
-
-  await app.listen(3000);
+  await app.listen(port);
 }
 bootstrap();

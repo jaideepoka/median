@@ -16,7 +16,6 @@ export class AuthController {
   @ApiOkResponse({ type: AuthEntity })
   async login(@Body() { email, password }: LoginDto) {
     const result = await this.authService.login(email, password);
-    console.log(result);
-    return { statusCode: HttpStatus.OK, message:"access token generated", result:result};
+    return { statusCode: HttpStatus.OK, message:"Access Token Generated", result:result};
   }
 }

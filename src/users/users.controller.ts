@@ -43,7 +43,7 @@ export class UsersController {
   async findAll() {
     const users = await this.usersService.findAll();
     const result = users.map((user) => new UserEntity(user))
-    return { statusCode: HttpStatus.OK, message:"users fetched successfully", result:result};
+    return { statusCode: HttpStatus.OK, message:"Users Fetched Successfully", result:result};
   }
 
   @Get(':id')
