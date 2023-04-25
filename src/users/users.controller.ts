@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -26,20 +27,21 @@ import { TransformInterceptor } from 'src/interceptors/transform.interceptor';
 
 @Controller('users')
 @ApiTags('users')
+@UseInterceptors(TransformInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @ApiCreatedResponse({ type: UserEntity })
   async create(@Body() createUserDto: CreateUserDto) {
-    return new UserEntity(await this.usersService.create(createUserDto));
+    const result = new UserEntity(await this.usersService.create(createUserDto));
+    return { statusCode: HttpStatus.OK, message:"User Created Successfully", result:result};
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity, isArray: true })
-  @UseInterceptors(TransformInterceptor)
   async findAll() {
     const users = await this.usersService.findAll();
     const result = users.map((user) => new UserEntity(user))
@@ -51,7 +53,12 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return new UserEntity(await this.usersService.findOne(id));
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with ${id} does not exist.`);
+    }
+    const result = new UserEntity(user);
+    return { statusCode: HttpStatus.OK, message:"User Fetched Successfully", result:result};
   }
 
   @Patch(':id')
@@ -62,7 +69,12 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return new UserEntity(await this.usersService.update(id, updateUserDto));
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with ${id} does not exist.`);
+    }
+    const result = new UserEntity(await this.usersService.update(id, updateUserDto));
+    return { statusCode: HttpStatus.OK, message:"User Updated Successfully", result:result};
   }
 
   @Delete(':id')
@@ -70,6 +82,11 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return new UserEntity(await this.usersService.remove(id));
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with ${id} does not exist.`);
+    }
+    const result = new UserEntity(await this.usersService.remove(id));
+    return { statusCode: HttpStatus.OK, message:"User Removed Successfully", result:result};
   }
 }
